@@ -1,0 +1,277 @@
+#+TITLE: Hands-on session: Radio data 
+#+AUTHOR: Òscar Morata
+#+OPTIONS: toc:nil
+
+* Analysis of a radio data set
+
+In this hands-on session we will learn how to start the manipulation and analysis of a real astronomical dataset taken with [[https://www.almaobservatory.org/en/home/][ALMA]] (Atacama Large Millimeter/Submillimeter Array). We will use data taken in the Science Verification (SV) campaign to characterize the long baseline observations of several astronomical objects. In our case, we will look at the multifrequency data obtained from the protoplanetary disk of HL Tau.
+
+The full calibration and analysis of the data is out of the scope of this hands-on session, due to its complexity and required resources, but we will go over some of the more general steps usually taken. We have divided the tutorial in three different major parts: i) initial data examination, ii) data imaging, and iii) examples of image analysis.
+
+Astronomers use telescopes to observe the sky. But the raw data taken by telescopes has to be (heavily) processed before we can obtained science-ready data files or images. Some of these processes require the calibration of the data, and the reduction of the observations. Nowadays, most if not all of this work is done using software adapted to the characteristics and performance of the different telescopes and instruments used to obtain the data. This means that there is a large amount of different software in the real world. In our case, we will the [[https://casa.nrao.edu/][CASA]] software which was developed to be a common processing software for many telescope facilities, in particular, radio telescopes. Among others, CASA can be used to process data of telescopes such as ALMA and [[https://public.nrao.edu/telescopes/vla/][VLA]], while other facilities (e.g., SMA, NOEMA, ATCA) have adapted their procedures to also be compatible with CASA if the user prefers to use this software.
+
+Thus, the first step is to download and install CASA, which should have been covered in the requirements sent before the start of the school.
+
+We will also distribute several data files that will be used through this tutorial. You can find them in [[https://saco.csic.es/s/W63RCGq6r2TfmEm][Data for the Hands-on session]]. There you will find several tar compressed files:
+
+#+begin_src bash
+  * hltau_b6.tgz        - visibilities for the Band 6 observations of HL Tau
+  * hltau_b7.tgz        - visibilities for the Band 7 observations of HL Tau
+  * reference_images.tz - final (FITS) images of the calibration & imaging pipeline
+  * b6_images.tgz       - images after (shallow) cleaning Band 6 data
+  * b7_images.tgz       - images after (shallow) cleaning Band 6 data
+#+end_src
+
+We can unpack the file *hltau_b6.tgz*
+#+begin_src bash
+  cd to_your_working_directory
+  tar zxvf hltau_b6.tgz
+#+end_src
+
+
+The files with the *.ms* extension are of the /measurement set/ type and contain the so-called visibilities observed by the interferometer. The *.fits* files contain alread processed images after running through all the step of the calibration and imaging stages
+
+  
+** data inspection
+
+We start casa by typing in the command line of a terminal:
+#+begin_src bash
+  casa
+#+end_src
+
+You should get a text similar to:
+#+begin_src
+
+IPython 7.34.0 -- An enhanced Interactive Python.
+
+Using matplotlib backend: TkAgg
+CASA 6.6.3.22 -- Common Astronomy Software Applications [6.6.3.22]
+
+#+end_src
+
+If all is working well, you will also get an additional window /Log Messages/ where you will get additional information on the progress of the tasks that
+will be run
+
+*** list of observations
+We will look at one of the =.ms= files to get information on what was observed from our object. We will use the =listobs= task to do it.
+
+All tasks (or functions) on CASA can be explored by typing
+#+begin_src bash
+  inp TASKNAME
+#+end_src
+
+which will list all the possible parameters that can be modified, with some short description of their purpose, and their current value.
+
+The most important parameter is =vis= which has the name of the file that contains our data. You can also specifiy a filename for =listfile= where the output of the task can be saved
+
+#+begin_src python
+  listobs(vis='hltau_b6.ms', listfile='hltau_b6.listobs')
+#+end_src
+
+*Questions:*
+ 1. what is the name of the source that has been observed?
+ 2. what are the observing frequencies
+ 3. what are the coordinates of the source?
+ 4. how many antennas were used in the observations?, can you say anything about where are they located?
+ 5. if you unpack the file =hltau_b7.tgz=, can you see the differences in the =listobs= output for =hltau_b7.ms=?
+ 6. are the coordinates the same for the two observation files?
+
+*** position of antennas   
+We can also look at how the antennas are distributed using the task /plotants/.
+ 
+#+begin_src python
+  plotants(vis='hltau_b6.ms')
+  plotants(vis='hltau_b6.ms', figfile='HL_Tau_B6cont_ants.png')
+#+end_src
+
+The second command saves the plot in a =png= file.
+
+*Questions:*
+- can you tell what is the longest distance between antennas?
+- what about the closest?
+
+*** inspection of the measurement set
+
+The measurement set can be extensively explored using the task *plotms*. This is very powerful task that allows the visualization (and also some manipulation) of the visibilites obtained by the telescope. It has a large number of ways of plotting the data in different combination of parameters. You can do
+#+begin_src bash
+  inp plotms
+#+end_src
+to see a list of parameters that can be set when calling the function. The main parameter is, again, /vis/. Just typing
+#+begin_src python
+  plotms(vis='hltau_b6.ms')
+#+end_src
+
+will open up the GUI where we can explore all the parameters more easily:
+<IMAGE>
+
+The left part of the window includes a list of tabs in which information can be modified, while the right panel shows the data to be plotted. The lower row has some button to among other things zoom in on the data or inspect more closely the data points. The three main tabs that we will use are: /Data/, /Axes/ and /Display/. We can generate a series of plots to have a look at the data now.
+
+**** plot the elevation of the target in time
+
+
+#+begin_src python
+    plotms(vis='hltau_b6.ms', yaxis='elevation', xaxis='time', scan='8~71', coloraxis='spw')
+#+end_src
+
+*Questions:*
+1. what happens if we take out the =scan= option?
+2. any idea of the origin of the gaps between scans?
+3. what do you see if you add the option /avgchannel='4'/?
+4. what if you use /avgtime='30'/?
+or:
+- select in the =Axes= tab: =x-axis: time=, =yaxis: elevation=
+- select in the =Data= tab: in =Selection=, =scan=, =8~71=
+
+
+**** plot the flux (amplitude) as a function of time
+  
+#+begin_src python
+  plotms(vis='hltau_b6.ms', coloraxis='spw', yaxis='amp', xaxis='time', avgchannel='4', avgtime='10', scan='8~71')    
+#+end_src
+
+*Questions:*
+1. is the time matching what you saw in the =listobs= file?
+2. how would you look at more scans? What are the times then?
+  
+**** plot the amplitude as a function of baseline
+#+begin_src python
+  plotms(vis='hltau_b6.ms',coloraxis='spw', yaxis='amp', xaxis='baseline', scan='8~71', avgchannel='4')
+#+end_src
+
+
+**** plot the amplitude as a function of frequency
+#+begin_src python
+  plotms(vis='hltau_b6.ms', coloraxis='spw', yaxis='amp', xaxis='freq', avgtime='30', scan='8~71')    
+#+end_src
+
+*Questions:*
+1. do the frequencies match those you saw in the =listobs= file?
+2. what are we seeing here?
+
+**** plot the distribution of visibilities in the (u,v) domain (Fourier domain)
+
+#+begin_src python
+
+  plotms(vis='hltau_b6.ms', coloraxis='baseline', yaxis='V', xaxis='U', avgtime='300')
+  
+#+end_src
+
+*Questions:*
+1. How are the colors (baselines) distributed in the plot?
+2. Do you see an inner gap at the center of the distribution? Which is its size?
+
+** data imaging
+
+Images can be produced from visibilities through a process that is traditionally called "CLEANing". The main goal of this process is to remove the instrumental effect of the sparse sampling of the interferometer to try to create a scientific-ready image. This process requires a series of steps that are repeated iteratively until we reach the total number of iterations or a certain threshold determined by the user. Without entering into details, we can directly say that the task (or function) =tclean= takes care of this iterative process and CLEANs the data to produce a final image. If we type
+#+begin_src python
+  inp tclean
+#+end_src
+we obtain the long list of parameters that can be used to control the imaging process. Some of the key parameters that we will use in this session are:
+#+begin_src text
+    - vis: name of the ms file to be processed
+    - datacolumn: to indicate that we want to use the data column which is the only one available in the files
+    - imagename: name of the output files that will be produced (without extension)
+    - imsize: size in pixels of the image to be produced (in our case 1600)
+    - cell: size of each pixel in arcseconds (in our case 0.005 arcsec)
+    - niter: number of iterations to be used
+    - interactive: set to False to speed up the process
+  
+#+end_src
+
+*** produce a dirty image
+A standard initial step for imaging is to proudce the *dirty image*, which is just the image generated from inverting the Fourier transform of the visibilities
+
+#+begin_src python
+  tclean(vis='hltau_b6.ms', imagename='b6_dirty.im',
+         specmode='mfs', nterms=1, gridder='standard',
+         imsize=1600, cell='0.005arcsec',
+         deconvolver='multiscale', scales=[0,5,15],
+         mask='',
+         weighting='briggs', robust=0.0,
+         interactive=False, niter=0, threshold='0.025mJy')
+#+end_src
+
+=tclean= produces a series of files with the same base name =b6_dirty= and different extensions:
+#+begin_src bash
+  - .image: final image
+  - .residual: residual containing the flux emission not yet CLEANed
+  - .psf: with the shape of the PSF of our observations
+  - .pb: with the shape of the primary beam
+#+end_src
+
+There are different ways to look at the resulting image, we can use CARTA or the task =imview=
+#+begin_src python
+  imview
+#+end_src
+It will open a GUI window, where we can select our image (as a raster file) and open it.
+
+*** produce a CLEANed image
+
+We can produce a better quality image increasing the number of iterations for the CLEAN process
+
+#+begin_src python
+  tclean(vis='hltau_b6.ms', imagename='b6_image',
+         specmode='mfs', nterms=1, gridder='standard',
+         imsize=1600, cell='0.005arcsec',
+         deconvolver='multiscale', scales=[0,5,15],
+         mask='first-mask.crtf', usemask='user', 
+         weighting='briggs', robust=0.0,
+         interactive=False, niter=5000, threshold='0.025mJy')
+#+end_src
+
+Open up the new image file with =imview= and take a look.
+
+*Questions:*
+- Do you see any differences compared to the dirty image?
+- Take a look at the =.residual= file. What do you see?
+
+
+Finally, we can also export our image to a FITS file using =exportfits=
+#+begin_src python
+  # Produce a final fits image
+  exportfits('b6_image.image','HLTau_B6cont.image.fits')
+#+end_src
+
+
+** Data Analysis 
+
+*** Statistical information from an image
+There are different ways to obtain statistical information from an image or region. One way is using the =imstat= task
+#+begin_src python
+  imstat('b6_image.im')
+#+end_src
+or for a region:
+
+#+begin_src python
+  imstat('b6_image.im', region='first-mask.crtf')   
+#+end_src
+
+Another option is using the GUI in =imview=
+
+
+
+*Questions:*
+- can you find the value of the peak flux of the image?
+- can you (approximately) find the total flux from the disk?
+- can you estimate the RMS (root mean square) of the map (the noise of the map)?
+
+
+*** Calculate spectral index
+
+We will use the =b7_conv.im= file from the Band 7 data set. This image was obtained after convolving the =b7_image.im= file with:
+#+begin_src python
+  imsmooth(imagename='b7_image.im', kernel='gauss', major='0.0351623arcsec', minor='0.0211161arcsec', pa='13.10008deg', overwrite=True, targetres=True,scale=-1, outfile='b7conv.im')      
+#+end_src
+
+So, both Band 6 and Band 7 dat would have the same beam.
+
+We will also use the =b6_image.im= file.
+
+A first approximation to calculate the specral index can be done
+#+begin_src python
+immath(imagename=['b7_conv.im','b6_image.im'], outfile='spidx.im', mode='evalexpr', expr='iif((abs(IM1)>0.000112)&&(abs(IM0)>0.000200)),log(IM0/IM1)/log(345/230),0)')    
+  
+#+end_src
+
+
+Use =imview= to look at the result.
