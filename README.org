@@ -24,7 +24,7 @@ Thus, the first step is to download and install CASA, which should have been cov
 
 We will also distribute several data files that will be used through this tutorial. You can find them in [[https://saco.csic.es/s/W63RCGq6r2TfmEm][Data for the Hands-on session]]. There you will find several tar compressed files:
 
-#+begin_src bash
+#+begin_src 
   * hltau_b6.tgz        - visibilities for the Band 6 observations of HL Tau
   * hltau_b7.tgz        - visibilities for the Band 7 observations of HL Tau
   * reference_images.tz - final (FITS) images of the calibration & imaging pipeline
