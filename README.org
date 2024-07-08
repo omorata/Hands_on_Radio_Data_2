@@ -277,8 +277,9 @@ Another option is using the GUI in =imview=
 
 We will use the =b7_conv.im= file from the Band 7 data set. This image was obtained after convolving the =b7_image.im= file with:
 #+begin_src python
-   imsmooth(imagename='b7_image.im', kernel='gauss',
-            major='0.0351623arcsec', minor='0.0211161arcsec', pa='13.10008deg', overwrite=True, targetres=True,scale=-1, outfile='b7conv.im')      
+      imsmooth(imagename='b7_image.im', kernel='gauss',
+               major='0.0351623arcsec', minor='0.0211161arcsec', pa='13.10008deg',
+               overwrite=True, targetres=True, scale=-1, outfile='b7conv.im')      
 #+end_src
 
 So, both Band 6 and Band 7 dat would have the same beam.
@@ -287,9 +288,10 @@ We will also use the =b6_image.im= file.
 
 A first approximation to calculate the specral index can be done
 #+begin_src python
-  immath(imagename=['b7_conv.im','b6_image.im'], outfile='spidx.im',
-         mode='evalexpr', expr='iif((abs(IM1)>0.000112)&&(abs(IM0)>0.000200)),log(IM0/IM1)/log(345/230),0)')    
-  
+     immath(imagename=['b7_conv.im','b6_image.im'], outfile='spidx.im',
+            mode='evalexpr',
+            expr='iif((abs(IM1)>0.000112)&&(abs(IM0)>0.000200)),log(IM0/IM1)/log(345/230),0)')    
+
 #+end_src
 
 
