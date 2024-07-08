@@ -102,7 +102,7 @@ to see a list of parameters that can be set when calling the function. The main 
 #+end_src
 
 will open up the GUI where we can explore all the parameters more easily:
-<IMAGE>
+[[./plotms_example.png]]
 
 The left part of the window includes a list of tabs in which information can be modified, while the right panel shows the data to be plotted. The lower row has some button to among other things zoom in on the data or inspect more closely the data points. The three main tabs that we will use are: /Data/, /Axes/ and /Display/. We can generate a series of plots to have a look at the data now.
 
@@ -205,6 +205,8 @@ There are different ways to look at the resulting image, we can use CARTA or the
 #+end_src
 It will open a GUI window, where we can select our image (as a raster file) and open it.
 
+[[./imview_example.png]]
+
 *** produce a CLEANed image
 
 We can produce a better quality image increasing the number of iterations for the CLEAN process
@@ -220,6 +222,8 @@ We can produce a better quality image increasing the number of iterations for th
 #+end_src
 
 Open up the new image file with =imview= and take a look.
+
+[[./imview_file.png]]
 
 *Questions:*
 - Do you see any differences compared to the dirty image?
